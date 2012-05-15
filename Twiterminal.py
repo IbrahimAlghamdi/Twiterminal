@@ -43,8 +43,6 @@ class StreamWatcher:
                 status_list = []
                 status_date = []
                 status_id   = []
-
-                #for status in tweepy.Cursor(api.mentions).items():
                    
                 statuses = tweepy.Cursor(api.mentions).items()
                 for status in statuses:

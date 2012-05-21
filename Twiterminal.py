@@ -9,87 +9,238 @@
 #
 # Copyright (C) 2012
 
-import tweepy, webbrowser, time, os, subprocess, random 
+import tweepy, webbrowser, time, os, subprocess, random, sys
 
-class StreamWatcher:
-
-    def retweetStatus(self, api, status_id):
-        api.retweet(status_id)
-
-    def executeCommand(self, api, status, commandID, status_id):
-        command = status.strip("@%s %s " %(api.me().screen_name, commandID))
-
-        if command.startswith("\"") == True: 
-            command = command.strip("\"")
-            try:
-                subprocess.Popen(command, shell=True)
-                self.retweetStatus(api, status_id)
-            except:
-                pass
-        else:
-            print "No quotations"
-
-    def watchMentions(self, api):
-        f = open(".settings")
-        info = f.read().strip().split(',')
+class Functions:
+    
+    def __init__(self):
+        f = open(".settings", "r")
+        info = f.read().strip().split(",")
         f.close()
 
-        date = config.date()
+        if sys.platform.startswith("linux")\
+            or sys.platform.startswith("darwin")\
+            or sys.platform.startswith("freebsd"):
+
+            self.OS = "unix"
+
+        elif sys.platform.startswith("win32"):
+            self.OS = "windows"
+
+    def shutdown(self):
+        if self.OS == "unix":
+            process = subprocess.Popen("sudo shutdown -h now", shell=True)
+            process.wait()
+
+        elif self.OS == "windows":
+            pass
+        
+        else:
+            print "Operating system is not supported." 
+
+    def restart(self):
+        if self.OS == "unix":
+            process = subprocess.Popen("sudo shutdown -r now", shell=True)
+            process.wait()
+
+        elif self.OS == "windows":
+            pass
+        
+        else:
+            print "Operating system is not supported." 
+
+
+    def sleep(self):
+        if self.OS == "unix":
+            process = subprocess.Popen("sudo pm-suspend", shell=True)
+            process.wait()
+
+        elif self.OS == "windows":
+            pass
+        
+        else:
+            print "Operating system is not supported." 
+
+    def hibernate(self):
+        if self.OS == "unix":
+            process = subprocess.Popen("sudo pm-hibernate", shell=True)
+            process.wait()
+
+        elif self.OS == "windows":
+            pass
+        
+        else:
+            print "Operating system is not supported." 
+
+    def logoff(self):
+        if self.OS == "unix":
+            process = subprocess.Popen("logout", shell=True)
+            process.wait()
+
+        elif self.OS == "windows":
+            pass
+        
+        else:
+            print "Operating system is not supported." 
+
+    def status(self):
+        if self.OS == "unix":
+            pass #subprocess.Popen("", shell=True)
+            
+        elif self.OS == "windows":
+            pass
+             
+        else:
+            print "Operating system is not supported." 
+
+    def customCommand(self, command):
+        if self.OS == "unix":
+            process = subprocess.Popen(command, shell=True)
+            process.wait()
+            return process
+
+        elif self.OS == "windows":
+            process = subprocess.Popen(command, shell=True)
+            process.wait()
+            return process
+
+        else:
+            print "Operating system is not supported." 
+
+class Stream:
+
+    def __init__(self):
+        
+        f = open(".settings", "r")
+        info = f.read().strip().split(",")
+        f.close()
+
+        self.timeout  = info[0]
+        self.command  = info[1]
+        self.username = info[2]
+
+        self.api    = config.OAuth()
+        self.userID = self.api.get_user(screen_name=self.username).id
+        self.me     = self.api.me().screen_name
+
+    def replyTweet(self, tweet, statusID):
+        
+        self.api.update_status("@%s %s %d" %(self.username, tweet, config.randomNumber()), in_reply_to_status_id = statusID)
+
+    def findCommand(self, status, statusID):
+        
+        command = status.strip("@%s %s " %(self.me, self.command))
+
+        if command.startswith("\"") == True: 
+            command = command.split("\"")
+   
+            process = functions.customCommand(command[1])
+    
+            if process.poll() != 0:
+                self.replyTweet("I'm sorry, sir, the command hasn't been successfully executed.", statusID)
+                
+            else:
+                self.replyTweet("Command has been successfully executed, sir.", statusID)
+            
+        else:
+            if "shutdown" in command.lower():
+                functions.shutdown()
+          
+            elif "restart" in command.lower():
+                functions.restart()
+            
+            elif "sleep" in command.lower():
+                functions.sleep()
+           
+            elif "hibernate" in command.lower():
+                functions.hibernate()
+          
+            elif "logoff" in command.lower():
+                functions.logoff()
+            
+            elif "status" in command.lower():
+                functions.status()
+            
+            else:
+                self.replyTweet("Command not found.", statusID)
+                print "Command not found."
+        
+    def streamMentions(self):
+       
+        self.date = config.date()
+        
         while True:
             try:
-                os.system("clear")
+                config.clearScreen()
                 print "Watcher (Ctrl + C to quit)"
                 
                 status_list = []
                 status_date = []
                 status_id   = []
-                   
-                statuses = tweepy.Cursor(api.mentions).items()
+                
+                statuses = tweepy.Cursor(self.api.mentions).items()
                 for status in statuses:
-                    if status.author.screen_name == info[2]\
-                    and status.text.startswith("@%s %s " %(\
-                                            api.me().screen_name,\
-                                            info[1])):
-                        
+
+                    if str(status.created_at) > self.date\
+                        and status.author.id == self.userID\
+                        and status.text.startswith("@%s %s" %\
+                                (self.me, self.command)):
+
                         status_list.append(status.text)
                         status_date.append(str(status.created_at))
                         status_id.append(status.id)
-
+                
                 status_list.reverse()
                 status_date.reverse()
                 status_id.reverse()
 
                 counter = 0
-                for status in status_list:
-                    if status_date[counter] > date:
-                        date = status_date[counter]
+                while counter < len(status_list):
 
-                        print "\t\n[%s] - %s\n" %(date, status)
-                        time.sleep(2)
+                    print "\t\n[%s] - %s\n" %(status_date[counter],\
+                                              status_list[counter])
+                    time.sleep(2)
 
-                        self.executeCommand(api, status, info[1], status_id[counter])
+                    self.findCommand(status_list[counter],\
+                                      status_id[counter])
+                    
+                    time.sleep(2)
+                    
                     counter += 1
 
-                time.sleep(int(info[0]))
+                self.date = status_date[-1]
+
+                time.sleep(int(self.timeout))
 
             except KeyboardInterrupt:
                 return False 
             except IndexError:
-                pass
+                pass 
 
-    def checker(self, api):
-        os.system("clear")
+class Config:
+
+    def checker(self):
+       
+        config.clearScreen()
 
         if os.path.exists(".settings") == False:
             print "You need to go to the settings menu before proceeding to this step."
             time.sleep(6)
     
         else:
-            self.watchMentions(api)
+            stream.streamMentions()
 
-class Config:
-	
+    def clearScreen(self):
+        
+        if sys.platform.startswith("linux")\
+            or sys.platform.startswith("darwin"):
+            os.system("clear")
+
+        elif sys.platform.startswith("win32"):
+	        os.system("clrscr")
+
     def OAuth(self):
+        
         if os.path.exists(".consumer"):
             f = open(".consumer", "r")
             info = f.read()
@@ -101,12 +252,12 @@ class Config:
             consumer_secret = info[1]
             
         else:
-            os.system("clear")
+            self.clearScreen()
 
             print "Twiterminal requires a Twitter app to connect to this computer's Twitter account. Please provide Twiterminal with the required information."
 
-            consumer_key = str(raw_input("Enter consumer key: "))
-            consumer_secret = str(raw_input("Enter consumer secret: ")) 
+            consumer_key = str(raw_input("Enter consumer key: ")).strip()
+            consumer_secret = str(raw_input("Enter consumer secret: ")).strip()
             
             f = open(".consumer", "w")
             f.writelines(consumer_key + "," + consumer_secret)
@@ -123,19 +274,20 @@ class Config:
             access_secret = info[1]
 
         else:
-            os.system("clear")
+            self.clearScreen()
             print "Twiterminal needs to have access to the Twitter account of this computer."
             print "You will be directed to a web page where you can authorize access for Twiterminal."
 
             time.sleep(10)
 
+            global auth
             auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
             redirect_url = auth.get_authorization_url()
             webbrowser.open_new_tab(redirect_url)
     
             time.sleep(5)
     
-            verifier = raw_input("Enter PIN: ")
+            verifier = str(raw_input("Enter PIN: ")).strip()
             auth.get_access_token(verifier)
     
             access_key = auth.access_token.key
@@ -151,6 +303,7 @@ class Config:
         return api
 
     def date(self):
+        
         gmttime = time.asctime(time.gmtime(time.time()))
         gmttime = gmttime.split(" ")
 
@@ -174,11 +327,13 @@ class Config:
                                gmttime[3])
 
     def randomNumber(self):
+        
         num = int(random.random() * pow(10,6)) 
         return num
 
     def settings(self):
-        os.system("clear")
+        
+        self.clearScreen()
 
         if os.path.exists(".settings") == False:
             info = ["30","DO","user"]
@@ -284,16 +439,19 @@ class Config:
             f.close()
 
 def main():
+    
     global config
     config = Config()
-    api = config.OAuth()
 
-    global streamWatcher
-    streamWatcher = StreamWatcher()
+    global stream
+    stream = Stream()
+
+    global functions
+    functions = Functions()
 
     try:
         while True:
-            os.system("clear")
+            config.clearScreen()
 
             print "Twerminal"
             print "\n    1. Start"
@@ -305,7 +463,7 @@ def main():
             user = int(raw_input("I choose: "))
 
             if user == 1:
-                streamWatcher.checker(api) 
+                config.checker() 
             elif user == 2:
                 config.settings()
             elif user == 3:
@@ -315,7 +473,7 @@ def main():
             elif user == 5:
                 print "Good bye!"
                 time.sleep(2)
-                os.system("clear")
+                config.clearScreen()
                 return False
             else:
                 print "Invalid input."

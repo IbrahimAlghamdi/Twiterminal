@@ -129,7 +129,7 @@ class Functions:
         else:
             print "Operating system is not supported." 
 
-# Contains all the Twitter functions
+# Contains all the Twitter functions.
 class Stream:
 
     # Initial method.

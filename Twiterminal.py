@@ -314,7 +314,7 @@ class Config:
     
         # If ".settings" file exists:
         else:
-            # Run streamMentions method.
+            # Runs streamMentions method.
             stream.streamMentions()
 
     # Clear screen method.
@@ -325,13 +325,13 @@ class Config:
             or sys.platform.startswith("darwin")\
             or sys.platform.startswith("freebsd"):
 
-            # Execute <clear>.
+            # Executes <clear>.
             os.system("clear")
 
         # If OS is Windows:
         elif sys.platform.startswith("win32"):
 	        
-            # Execute <clrscr>.
+            # Executes <clrscr>.
             os.system("clrscr")
 
     # OAuth method.

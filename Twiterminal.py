@@ -46,8 +46,7 @@ class Functions:
 
         # Windows OS:
         elif self.OS == "windows":
-            process = subprocess.Popen("shutdown -s", shell=True)
-            process.wait()
+            pass
 
         # Unsupported OS's:
         else:
@@ -55,67 +54,56 @@ class Functions:
 
     # Restart method.
     def restart(self):
-
         if self.OS == "unix":
             process = subprocess.Popen("sudo shutdown -r now", shell=True)
             process.wait()
 
         elif self.OS == "windows":
-            process = subprocess.Popen("shutdown -r", shell=True)
-            process.wait()
+            pass
 
         else:
             print "Operating system is not supported."
 
     # Sleep/Suspend method.
     def sleep(self):
-
         if self.OS == "unix":
             process = subprocess.Popen("sudo pm-suspend", shell=True)
             process.wait()
 
         elif self.OS == "windows":
-            process = subprocess.Popen("rundll32.exe powrprof.dll,SetSuspendState 0,1,0", shell=True)
-            process.wait()
-#           pass
+            pass
 
         else:
             print "Operating system is not supported."
 
     # Hibernate method.
     def hibernate(self):
-
         if self.OS == "unix":
             process = subprocess.Popen("sudo pm-hibernate", shell=True)
             process.wait()
 
         elif self.OS == "windows":
-            process = subprocess.Popen("rundll32.exe PowrProf.dll,SetSuspendState", shell=True)
-            process.wait()
-#            pass
+            pass
 
         else:
             print "Operating system is not supported."
 
     # Logoff method.
     def logoff(self):
-
         if self.OS == "unix":
             process = subprocess.Popen("logout", shell=True)
             process.wait()
 
         elif self.OS == "windows":
-            process = subprocess.Popen("shutdown -l", shell=True)
-            process.wait()
+            pass
 
         else:
             print "Operating system is not supported."
 
     # System information method.
     def status(self):
-
         if self.OS == "unix":
-            pass
+            pass #subprocess.Popen("", shell=True)
 
         elif self.OS == "windows":
             pass
@@ -136,6 +124,18 @@ class Functions:
         elif self.OS == "windows":
             process = subprocess.Popen(command, shell=True)
             process.wait()
+            return process
+
+        else:
+            print "Operating system is not supported."
+
+# Contains all the Twitter functions.
+class Stream:
+
+    # Initial method.
+    def __init__(self):
+
+        # Imports settings.
             return process
 
         else:
@@ -562,18 +562,6 @@ class Config:
 
                 except:
                     print "Unexpected error."
-                    time.sleep(3)
-
-            # If user enters number wrong:
-            else:
-                # Does nothing and sleeps for 3 seconds.
-                print "Nothing has been changed."
-                time.sleep(3)
-
-        elif user == "5":
-            num = self.randomNumber()
-            user = str(raw_input("Please enter %s to reset login information (Enter anything to keep them):" %num))
-
             if user == str(num):
                 try:
                     os.remove(".consumer")
@@ -690,4 +678,4 @@ def main():
 
 # Runs main method when __name__ == "__main__"
 if __name__ == "__main__":
-   main()
+    main()

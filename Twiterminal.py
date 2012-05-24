@@ -47,7 +47,11 @@ class Functions:
         # Windows OS:
         elif self.OS == "windows":
             pass
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> 0febe2f... Some changes.
         # Unsupported OS's:
         else:
             print "Operating system is not supported." 
@@ -60,7 +64,11 @@ class Functions:
 
         elif self.OS == "windows":
             pass
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> 0febe2f... Some changes.
         else:
             print "Operating system is not supported." 
 
@@ -72,7 +80,11 @@ class Functions:
 
         elif self.OS == "windows":
             pass
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> 0febe2f... Some changes.
         else:
             print "Operating system is not supported." 
 
@@ -84,7 +96,11 @@ class Functions:
 
         elif self.OS == "windows":
             pass
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> 0febe2f... Some changes.
         else:
             print "Operating system is not supported." 
 
@@ -96,7 +112,11 @@ class Functions:
 
         elif self.OS == "windows":
             pass
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> 0febe2f... Some changes.
         else:
             print "Operating system is not supported." 
 
@@ -104,7 +124,11 @@ class Functions:
     def status(self):
         if self.OS == "unix":
             pass #subprocess.Popen("", shell=True)
+<<<<<<< HEAD
             
+=======
+
+>>>>>>> 0febe2f... Some changes.
         elif self.OS == "windows":
             pass
              
@@ -128,6 +152,18 @@ class Functions:
 
         else:
             print "Operating system is not supported." 
+
+# Contains all the Twitter functions.
+class Stream:
+
+    # Initial method.
+    def __init__(self):
+
+        # Imports settings.
+            return process
+
+        else:
+            print "Operating system is not supported."
 
 # Contains all the Twitter functions.
 class Stream:
@@ -548,6 +584,7 @@ class Config:
 
                 except:
                     print "Unexpected error."
+<<<<<<< HEAD
                     time.sleep(3)
 
             # If user enters number wrong:
@@ -560,6 +597,8 @@ class Config:
             num = self.randomNumber()
             user = str(raw_input("Please enter %s to reset login information (Enter anything to keep them):" %num))
            
+=======
+>>>>>>> 0febe2f... Some changes.
             if user == str(num):
                 try:
                     os.remove(".consumer")

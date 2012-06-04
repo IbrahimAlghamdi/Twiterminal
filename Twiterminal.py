@@ -17,11 +17,6 @@ class Functions:
     # Initial method.
     def __init__(self):
 
-        # Imports settings.
-        f = open(".settings", "r")
-        info = f.read().strip().split(",")
-        f.close()
-
         # Determines if the program is running on
         # a *NIX or windows machine.
         if sys.platform.startswith("linux")\
@@ -61,7 +56,7 @@ class Functions:
             process.wait()
 
         elif self.OS == "windows":
-            process = subprocess.Popen("sudo shutdown -r now", shell=True)
+            process = subprocess.Popen("sudo shutdown -r", shell=True)
             process.wait()
 
         else:
@@ -146,6 +141,9 @@ class Stream:
     # Initial method.
     def __init__(self):
 
+        # Creates missing files.
+        config.fileCheck()
+
         # Imports settings.
         f = open(".settings", "r")
         info = f.read().strip().split(",")
@@ -226,6 +224,9 @@ class Stream:
                 self.replyTweet("Command not found, sir!", statusID)
                 print "Command not found."
 
+            # Adds command to history.
+            config.addHistory(command)
+
     # Import mentions method.
     def streamMentions(self):
 
@@ -236,9 +237,13 @@ class Stream:
         while True:
             try:
 
+                # Displays remaining_hits
+                rem = self.api.rate_limit_status()
+                rem = rem['remaining_hits']
+
                 # Clears screen.
                 config.clearScreen()
-                print "Watcher (Ctrl + C to quit)"
+                print "Watcher (Ctrl + C to quit) %d" %rem
 
                 # Initiates lists.
                 status_list = [] # Contains statuses.
@@ -270,66 +275,60 @@ class Stream:
                 status_date.reverse() # Statuses dates.
                 status_id.reverse() # Statuses ID's.
 
-                # Counter variable.
-                counter = 0
+                # Only works if status_list is not empty.
+                if len(status_list) > 0:
 
-                # While-loop. While counter is less than
-                # the length of status_list:
-                while counter < len(status_list):
+                    # Counter variable.
+                    counter = 0
 
-                    # Prints status and status date/time.
-                    print "\t\n[%s] - %s\n" %(status_date[counter],\
-                                              status_list[counter])
+                    # While-loop. While counter is less than
+                    # the length of status_list:
+                    while counter < len(status_list):
 
-                    # Sleeps for 2 seconds.
-                    time.sleep(2)
+                        # Prints status and status date/time.
+                        print "\t\n[%s] - %s\n" %(status_date[counter],\
+                                                  status_list[counter])
 
-                    # Passes status and status ID to findCommand method.
-                    self.findCommand(status_list[counter],\
-                                      status_id[counter])
+                        # Sleeps for 2 seconds.
+                        time.sleep(2)
 
-                    # Sleeps for 2 seconds.
-                    time.sleep(2)
+                        # Passes status and status ID to findCommand method.
+                        self.findCommand(status_list[counter],\
+                                         status_id[counter])
 
-                    # Adds 1 to counter.
-                    counter += 1
+                        # Sleeps for 2 seconds.
+                        time.sleep(2)
 
-                # Important command. This sets the date variable
-                # equal to the last executed command's status so
-                # the program will ignore that status and
-                # statuses before that one.
-                self.date = status_date[-1]
+                        # Adds 1 to counter.
+                        counter += 1
 
-                # Sleep for a user's specified time.
-                time.sleep(int(self.timeout))
+                        # Important command. This sets the date variable
+                        # equal to the last executed command's status so
+                        # the program will ignore that status and
+                        # statuses before that one.
+                        self.date = status_date[-1]
 
-            # Closes when user hits <Ctrl + C>.
+            # Closes when user presses <Ctrl + C>.
             except KeyboardInterrupt:
                 return False
-            # Passes when IndexError is raised.
-            except IndexError:
-                pass
+
+            # Keeps program running.
+            except:
+                time.sleep(int(self.timeout))
+
+            # Makes computer sleep for a
+            # number of seconds.
+            else:
+                time.sleep(int(self.timeout))
 
 # Contains all the settings and access information.
 class Config:
 
-    # Checker method. Checks if ".settings" file exists.
-    def checker(self):
+    # Initial funtion.
+    def __init__(self):
 
-        # Clears screen.
-        config.clearScreen()
-
-        # If ".settings" file doesn't exist:
-        if os.path.exists(".settings") == False:
-
-            # Prints a message and sleeps for 6 seconds.
-            print "You need to go to the settings menu before proceeding to this step."
-            time.sleep(6)
-
-        # If ".settings" file exists:
-        else:
-            # Runs streamMentions method.
-            stream.streamMentions()
+        # Creates missing files.
+        self.fileCheck()
 
     # Clear screen method.
     def clearScreen(self):
@@ -347,6 +346,35 @@ class Config:
 
             # Executes <clrscr>.
             os.system("clrscr")
+
+    # File checking method.
+    def fileCheck(self):
+
+        # If ".settings" doesn't exist:
+        if os.path.exists(".settings") == False:
+
+            # Creates it by using the default values.
+            info = ["65","DO","user"]
+            f = open(".settings", "w")
+            os.chmod(".settings", 0664)
+            info = ",".join(info)
+            f.write(info)
+            f.close()
+
+        # If ".history" doesn't exist:
+        if os.path.exists(".history") == False:
+
+            # Creates .history if it doesn't exist.
+            f = open(".history", "w")
+            os.chmod(".history", 0664)
+            f.close()
+
+        # If ".consumer" and ".access"
+        # don't exist.
+        if os.path.exists(".consumer") == False or\
+           os.path.exists(".access") == False:
+
+            self.OAuth()
 
     # OAuth method.
     def OAuth(self):
@@ -376,14 +404,17 @@ class Config:
             print "Twiterminal requires a Twitter app to connect to this computer's Twitter account. Please provide Twiterminal with the required information."
 
             # Prompts user for Consumer Key and Consumer Secret.
-            consumer_key = str(raw_input("Enter consumer key: ")).strip()
+            consumer_key = str(raw_input("\nEnter consumer key: ")).strip()
             consumer_secret = str(raw_input("Enter consumer secret: ")).strip()
 
             # Writes Consumer Key and Consumer Secret
             # to a file for later use.
             f = open(".consumer", "w")
+            os.chmod(".consumer", 0664)
             f.writelines(consumer_key + "," + consumer_secret)
             f.close()
+
+            time.sleep(2)
 
         # If ".access" file exists:
         if os.path.exists(".access"):
@@ -407,34 +438,51 @@ class Config:
             self.clearScreen()
 
             # Prints messages.
-            print "Twiterminal needs to have access to the Twitter account of this computer."
-            print "You will be directed to a web page where you can authorize access for Twiterminal."
+            print "Twiterminal needs to have access to the Twitter account for this computer."
 
-            # Sleeps for 10 seconds.
-            time.sleep(10)
+            user = raw_input("\n[1] PIN.\n[2] Access key/secret\nI choose: ")
 
-            # Connects to the Twitter app, and redirects
-            # the user to a web page to authorize the app
-            # and returns a PIN.
-            global auth
-            auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-            redirect_url = auth.get_authorization_url()
-            webbrowser.open_new_tab(redirect_url)
+            # If user chooses 1.
+            if user == '1':
 
-            # Sleep for 5 seconds.
-            time.sleep(5)
+                print "\nYou will be directed to a web page where you can authorize access for Twiterminal."
 
-            # Prompts the user for PIN to have access to the
-            # client's Twitter account.
-            verifier = str(raw_input("Enter PIN: ")).strip()
-            auth.get_access_token(verifier)
+                # Sleeps for 10 seconds.
+                time.sleep(10)
 
-            # Sets Access Key and Access Secret to variables.
-            access_key = auth.access_token.key
-            access_secret = auth.access_token.secret
+                # Connects to the Twitter app, and redirects
+                # the user to a web page to authorize the app
+                # and returns a PIN.
+                global auth
+                auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+                redirect_url = auth.get_authorization_url()
+                webbrowser.open_new_tab(redirect_url)
+
+                # Sleep for 5 seconds.
+                time.sleep(5)
+
+                # Prompts the user for PIN to have access to the
+                # client's Twitter account.
+                verifier = str(raw_input("\nEnter PIN: ")).strip()
+                auth.get_access_token(verifier)
+
+                # Sets Access Key and Access Secret to variables.
+                access_key    = auth.access_token.key
+                access_secret = auth.access_token.secret
+
+                time.sleep(2)
+
+            # If user chooses 2.
+            else:
+
+                access_key    = raw_input("\nAccess Key: ")
+                access_secret = raw_input("Access Secret: ")
+
+                time.sleep(2)
 
             # Writes information to a file for later use.
             f = open(".access", "w")
+            os.chmod(".access", 0664)
             f.writelines(access_key + "," + access_secret)
             f.close()
 
@@ -452,7 +500,7 @@ class Config:
         gmttime = time.asctime(time.gmtime(time.time()))
 
         # Splits information seperated by " ".
-        gmttime = gmttime.split(" ")
+        gmttime = gmttime.split()
 
         # Dictionary of months.
         months = {"Jan" : "01",\
@@ -470,6 +518,9 @@ class Config:
 
         # Changes month from words to numbers.
         gmttime[1] = months[gmttime[1]]
+
+        if int(gmttime[2]) < 10:
+            gmttime[2] = "0%s" %gmttime[2]
 
         # Returns date in the same format as Twitter.
         return "%s-%s-%s %s" %(gmttime[4],\
@@ -492,16 +543,6 @@ class Config:
         # Clears screen.
         self.clearScreen()
 
-        # If ".settings" file doesn't exist:
-        if os.path.exists(".settings") == False:
-
-            # Creates it by using the default values.
-            info = ["30","DO","user"]
-            f = open(".settings", "w")
-            info = ",".join(info)
-            f.write(info)
-            f.close()
-
         # Opens ".settings" and imports information.
         f = open(".settings", "r")
         info = f.read().strip().split(',')
@@ -515,8 +556,9 @@ class Config:
         print "    [3]  Username  : %s" %info[2] # Username.
         print "\nDelete settings:"
         print "    [4] Settings."
-        print "    [5] Login information."
-        print "    [6] Default settings."
+        print "    [5] History."
+        print "    [6] Login information."
+        print "    [7] Default settings."
 
         # Prompts user for an option.
         user = raw_input("\nWhat do you want to change (-1 to quit)? ")
@@ -528,8 +570,15 @@ class Config:
         if user == "1":
             # Prompts user for input and changes the settings value.
             user = int(raw_input("Enter a value: ").strip())
-            info.pop(0)
-            info.insert(0, str(user))
+
+            # Only allows >= 65
+            if user >= 65:
+                info.pop(0)
+                info.insert(0, str(user))
+
+            else:
+                print "Timeout has to be no less than 65."
+                time.sleep(3)
 
         elif user == "2":
             user = str(raw_input("Enter a starting command: ").strip())
@@ -542,17 +591,18 @@ class Config:
             info.insert(2, user)
 
         # If user chooses 4 OR 5 OR 6:
-        # 5 - Delete settings.
+        # 4 - Delete settings.
+        # 5 - Delete history.
         # 6 - Delete login information.
         # 7 - Delete all settings (Return to default settings).
         elif user == "4":
+
             # Generate a random number for confirmation.
             num = self.randomNumber()
             user = str(raw_input("Please enter %s to delete settings (Enter anything to keep them):" %num))
 
             # If user enters number right:
             if user == str(num):
-
                 try:
                     # Removes ".settings" file, prints a
                     # message and sleeps for 3 seconds.
@@ -560,9 +610,12 @@ class Config:
                     print "Settings have been successfully removed."
                     time.sleep(3)
 
+                except OSError:
+                    print "File is not found."
+                    time.sleep(3)
+
                 except:
                     print "Unexpected error."
-
                     time.sleep(3)
 
             # If user enters number wrong:
@@ -572,6 +625,34 @@ class Config:
                 time.sleep(3)
 
         elif user == "5":
+            # Generate a random number for confirmation.
+            num = self.randomNumber()
+            user = str(raw_input("Please enter %s to delete settings (Enter anything to keep them):" %num))
+
+            # If user enters number right:
+            if user == str(num):
+                try:
+                    # Removes ".history" file, prints a
+                    # message and sleeps for 3 seconds.
+                    os.remove(".history")
+                    print "Settings have been successfully removed."
+                    time.sleep(3)
+
+                except OSError:
+                    print "File is not found."
+                    time.sleep(3)
+
+                except:
+                    print "Unexpected error."
+                    time.sleep(3)
+
+            # If user enters number wrong:
+            else:
+                # Does nothing and sleeps for 3 seconds.
+                print "Nothing has been changed."
+                time.sleep(3)
+
+        elif user == "6":
             num = self.randomNumber()
             user = str(raw_input("Please enter %s to reset login information (Enter anything to keep them):" %num))
 
@@ -581,14 +662,20 @@ class Config:
                     os.remove(".access")
                     print "Login information have been successfully reset."
                     time.sleep(3)
+
+                except OSError:
+                    print "File is not found."
+                    time.sleep(3)
+
                 except:
                     print "Unexpected error."
                     time.sleep(3)
+
             else:
                 print "Nothing has been changed."
                 time.sleep(3)
 
-        elif user == "6":
+        elif user == "7":
             num = self.randomNumber()
             user = str(raw_input("Please enter %s to reset all settings (Enter anything to keep everything):" %num))
 
@@ -597,8 +684,14 @@ class Config:
                     os.remove(".settings")
                     os.remove(".consumer")
                     os.remove(".access")
+                    os.remove(".history")
                     print "All settings have been successfully removed."
                     time.sleep(3)
+
+                except OSError:
+                    print "File is not found."
+                    time.sleep(3)
+
                 except:
                     print "Unexpected error."
                     time.sleep(3)
@@ -624,12 +717,93 @@ class Config:
             f.write(info)
             f.close()
 
+    # Lists the available commands.
+    def commandsList(self):
+
+        user = ''
+        while user != '-1':
+
+            config.clearScreen()
+
+            print "Commands list:\n"
+            print "    shutdown"
+            print "    restart"
+            print "    sleep"
+            print "    hibernate"
+            print "    logoff"
+            print "    status"
+
+            user = raw_input("Enter -1 to quit: ")
+
+    # Add to history method.
+    def addHistory(self, command):
+
+        # Opens .history and assigns the content
+        # to a variable.
+        f = open(".history", "r")
+        info = f.read()
+        f.close()
+
+        # Splits new lines.
+        info = info.split("\n")
+
+        # Adds new command to info list.
+        info.append(command)
+
+        # Removes "" from info list.
+        while "" in info:
+            info.remove("")
+
+        # Joins items.
+        info = "\n".join(info)
+
+        # Saves changes to .history.
+        f = open(".history", "w")
+        f.write(info)
+        f.close()
+
+    # Display history method.
+    def displayHistory(self):
+
+        # Clears screen
+        self.clearScreen()
+
+        print "History:\n"
+
+        # Checks if file exists.
+        if os.path.exists(".history"):
+
+            # Opens and reads file.
+            f = open(".history", "r")
+            info = f.read()
+            f.close()
+
+            # Checks if file is empty. Program will
+            # display all commands in history.
+            if len(info) == 0:
+                print "    History file is empty."
+                time.sleep(2)
+
+            else:
+                user = ''
+                while user != '-1':
+                    print info + "\n"
+
+                    user = raw_input("Enter -1 to quit: ")
+
+        else:
+            print "    History file is empty."
+            time.sleep(2)
+
 # Main method
 def main():
 
     # Config global variable.
     global config
     config = Config()
+
+    # Creates missing files.
+    config.fileCheck()
 
     # Stream global variable.
     global stream
@@ -659,16 +833,16 @@ def main():
 
             # Runs the appropriate class and method.
             if user == 1:
-                config.checker()
+                stream.streamMentions()
 
             elif user == 2:
                 config.settings()
 
             elif user == 3:
-                pass
+                config.commandsList()
 
             elif user == 4:
-                pass
+                config.displayHistory()
 
             elif user == 5:
                 # Prints a message, sleeps for 2 seconds,

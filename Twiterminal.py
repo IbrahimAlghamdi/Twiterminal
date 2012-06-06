@@ -52,7 +52,7 @@ class Functions:
     def restart(self):
 
         if self.OS == "unix":
-            process = subprocess.Popen("sudo shutdown -s now", shell=True)
+            process = subprocess.Popen("sudo shutdown -r now", shell=True)
             process.wait()
 
         elif self.OS == "windows":

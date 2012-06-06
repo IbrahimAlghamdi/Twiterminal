@@ -141,9 +141,6 @@ class Stream:
     # Initial method.
     def __init__(self):
 
-        # Creates missing files.
-        config.fileCheck()
-
         # Imports settings.
         f = open(".settings", "r")
         info = f.read().strip().split(",")
@@ -196,6 +193,9 @@ class Stream:
             else:
                 self.replyTweet("Yes, sir!", statusID)
 
+            # Adds command to history.
+            config.addHistory(command[1])
+
         #If a pre-made command:
         else:
             # Find the command in the status and
@@ -243,7 +243,7 @@ class Stream:
 
                 # Clears screen.
                 config.clearScreen()
-                print "Watcher (Ctrl + C to quit) %d" %rem
+                print "Watcher (Ctrl + C to quit) - Remaining requests: %d" %rem
 
                 # Initiates lists.
                 status_list = [] # Contains statuses.
@@ -324,12 +324,6 @@ class Stream:
 # Contains all the settings and access information.
 class Config:
 
-    # Initial funtion.
-    def __init__(self):
-
-        # Creates missing files.
-        self.fileCheck()
-
     # Clear screen method.
     def clearScreen(self):
 
@@ -356,7 +350,7 @@ class Config:
             # Creates it by using the default values.
             info = ["65","DO","user"]
             f = open(".settings", "w")
-            os.chmod(".settings", 0664)
+            os.chmod(".settings", 0600)
             info = ",".join(info)
             f.write(info)
             f.close()
@@ -366,7 +360,7 @@ class Config:
 
             # Creates .history if it doesn't exist.
             f = open(".history", "w")
-            os.chmod(".history", 0664)
+            os.chmod(".history", 0600)
             f.close()
 
         # If ".consumer" and ".access"
@@ -410,7 +404,7 @@ class Config:
             # Writes Consumer Key and Consumer Secret
             # to a file for later use.
             f = open(".consumer", "w")
-            os.chmod(".consumer", 0664)
+            os.chmod(".consumer", 0600)
             f.writelines(consumer_key + "," + consumer_secret)
             f.close()
 
@@ -482,7 +476,7 @@ class Config:
 
             # Writes information to a file for later use.
             f = open(".access", "w")
-            os.chmod(".access", 0664)
+            os.chmod(".access", 0600)
             f.writelines(access_key + "," + access_secret)
             f.close()
 
@@ -603,6 +597,8 @@ class Config:
 
             # If user enters number right:
             if user == str(num):
+
+                # Catches errors.
                 try:
                     # Removes ".settings" file, prints a
                     # message and sleeps for 3 seconds.
@@ -610,10 +606,14 @@ class Config:
                     print "Settings have been successfully removed."
                     time.sleep(3)
 
+                # Prints a message when an error occurs
+                # when accessing a file.
                 except OSError:
                     print "File is not found."
                     time.sleep(3)
 
+                # Prints a message when any error is
+                # raised.
                 except:
                     print "Unexpected error."
                     time.sleep(3)
@@ -701,7 +701,7 @@ class Config:
 
         # Quits if user enters -1.
         elif user == "-1":
-            pass
+            return "-1"
 
         # If user enters an invalid input:
         else:
@@ -720,46 +720,30 @@ class Config:
     # Lists the available commands.
     def commandsList(self):
 
+        # Runs loop until user enters -1.
         user = ''
         while user != '-1':
 
+            # Clears screen.
             config.clearScreen()
 
-            print "Commands list:\n"
+            print "Commands list\n"
             print "    shutdown"
             print "    restart"
             print "    sleep"
             print "    hibernate"
             print "    logoff"
-            print "    status"
+            #print "    status"
 
-            user = raw_input("Enter -1 to quit: ")
+            user = raw_input("\nEnter -1 to quit: ")
 
     # Add to history method.
     def addHistory(self, command):
 
         # Opens .history and assigns the content
         # to a variable.
-        f = open(".history", "r")
-        info = f.read()
-        f.close()
-
-        # Splits new lines.
-        info = info.split("\n")
-
-        # Adds new command to info list.
-        info.append(command)
-
-        # Removes "" from info list.
-        while "" in info:
-            info.remove("")
-
-        # Joins items.
-        info = "\n".join(info)
-
-        # Saves changes to .history.
-        f = open(".history", "w")
-        f.write(info)
+        f = open(".history", "a")
+        f.write(command + "\n")
         f.close()
 
     # Display history method.
@@ -768,7 +752,7 @@ class Config:
         # Clears screen
         self.clearScreen()
 
-        print "History:\n"
+        print "History\n"
 
         # Checks if file exists.
         if os.path.exists(".history"):
@@ -785,9 +769,21 @@ class Config:
                 time.sleep(2)
 
             else:
+                # Splits lines.
+                info = info.split("\n")
+
+                # Runs loop until user enters -1
                 user = ''
                 while user != '-1':
-                    print info + "\n"
+
+                    # Runs loop until all items in list
+                    # are displayed.
+                    counter = 0
+                    while counter < len(info):
+
+                        # Prints items.
+                        print "    " + info[counter]
+                        counter += 1
 
                     user = raw_input("Enter -1 to quit: ")
 
@@ -817,6 +813,8 @@ def main():
         # While-loop.
         while True:
 
+            config.fileCheck()
+
             # Clears screen.
             config.clearScreen()
 
@@ -829,22 +827,23 @@ def main():
             print "    5. Exit"          # Exit.
 
             # Prompts user for a number.
-            user = int(raw_input("I choose: "))
+            user = raw_input("\nI choose: ")
 
             # Runs the appropriate class and method.
-            if user == 1:
+            if user == '1':
                 stream.streamMentions()
 
-            elif user == 2:
-                config.settings()
+            elif user == '2':
+                while user != '-1':
+                    user = config.settings()
 
-            elif user == 3:
+            elif user == '3':
                 config.commandsList()
 
-            elif user == 4:
+            elif user == '4':
                 config.displayHistory()
 
-            elif user == 5:
+            elif user == '5':
                 # Prints a message, sleeps for 2 seconds,
                 # clears screen, and returns false to break
                 # loop.

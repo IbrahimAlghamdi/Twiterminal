@@ -813,6 +813,8 @@ def main():
         # While-loop.
         while True:
 
+            # Checks that all needed files
+            # are available.
             config.fileCheck()
 
             # Clears screen.

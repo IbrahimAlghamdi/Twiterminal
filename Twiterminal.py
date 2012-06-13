@@ -260,7 +260,7 @@ class Stream:
                     # the initial date, have the same author's name
                     # as in settings, and starts with @<username> <command>:
                     if str(status.created_at) > self.date\
-                        and status.author.id == self.userID\
+                        and status.author.screen_name == self.username\
                         and status.text.startswith("@%s %s" %\
                                 (self.me, self.command)):
 
@@ -533,6 +533,12 @@ class Config:
     # Settings method. This is where settings will
     # be made and edited by the user.
     def settings(self):
+
+        # Clears screen.
+        self.clearScreen()
+
+        # Creates missing files.
+        self.fileCheck()
 
         # Clears screen.
         self.clearScreen()
@@ -821,7 +827,7 @@ def main():
             config.clearScreen()
 
             # Prints main menu.
-            print "Twerminal"
+            print "Twiterminal"
             print "\n    1. Start"       # Starts listening.
             print "    2. Settings"      # Settings menu.
             print "    3. Commands list" # Commands list.

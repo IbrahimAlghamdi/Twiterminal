@@ -599,7 +599,7 @@ class Config:
 
             # Generate a random number for confirmation.
             num = self.randomNumber()
-            user = str(raw_input("Please enter %s to delete settings (Enter anything to keep them):" %num))
+            user = str(raw_input("Please enter %s to restore settings (Enter anything to keep them): " %num))
 
             # If user enters number right:
             if user == str(num):
@@ -609,7 +609,7 @@ class Config:
                     # Removes ".settings" file, prints a
                     # message and sleeps for 3 seconds.
                     os.remove(".settings")
-                    print "Settings have been successfully removed."
+                    print "Settings have been successfully restored."
                     time.sleep(3)
 
                 # Prints a message when an error occurs
@@ -633,7 +633,7 @@ class Config:
         elif user == "5":
             # Generate a random number for confirmation.
             num = self.randomNumber()
-            user = str(raw_input("Please enter %s to delete settings (Enter anything to keep them):" %num))
+            user = str(raw_input("Please enter %s to delete history (Enter anything to keep them): " %num))
 
             # If user enters number right:
             if user == str(num):
@@ -641,7 +641,7 @@ class Config:
                     # Removes ".history" file, prints a
                     # message and sleeps for 3 seconds.
                     os.remove(".history")
-                    print "Settings have been successfully removed."
+                    print "History has been successfully deleted."
                     time.sleep(3)
 
                 except OSError:
@@ -660,7 +660,7 @@ class Config:
 
         elif user == "6":
             num = self.randomNumber()
-            user = str(raw_input("Please enter %s to reset login information (Enter anything to keep them):" %num))
+            user = str(raw_input("Please enter %s to reset login information (Enter anything to keep them): " %num))
 
             if user == str(num):
                 try:
@@ -683,7 +683,7 @@ class Config:
 
         elif user == "7":
             num = self.randomNumber()
-            user = str(raw_input("Please enter %s to reset all settings (Enter anything to keep everything):" %num))
+            user = str(raw_input("Please enter %s to reset all settings (Enter anything to keep everything): " %num))
 
             if user == str(num):
                 try:
@@ -691,7 +691,7 @@ class Config:
                     os.remove(".consumer")
                     os.remove(".access")
                     os.remove(".history")
-                    print "All settings have been successfully removed."
+                    print "All settings have been successfully reset."
                     time.sleep(3)
 
                 except OSError:
